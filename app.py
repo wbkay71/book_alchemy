@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+from sqlalchemy import or_ as db_or
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
@@ -31,24 +32,38 @@ if not os.path.exists(data_dir):
 #   db.create_all()
 #   print("Database tables created successfully!")
 
-# Home route with sorting
+# Home route with sorting and search
 @app.route('/')
 def home():
     # Get sort parameter from URL
     sort_by = request.args.get('sort', 'title')  # Default sort by title
+    search_query = request.args.get('search', '')  # Get search query
 
-    # Query books with sorting
+    # Start with base query
+    query = Book.query
+
+    # Apply search filter if search query exists
+    if search_query:
+        # Search in book title OR author name
+        query = query.join(Author).filter(
+            db.or_(
+                Book.title.like(f'%{search_query}%'),
+                Author.name.like(f'%{search_query}%')
+            )
+        )
+
+    # Apply sorting
     if sort_by == 'author':
-        # Sort by author name (join with Author table)
-        books = Book.query.join(Author).order_by(Author.name).all()
+        books = query.join(Author).order_by(Author.name).all()
     elif sort_by == 'year':
-        # Sort by publication year
-        books = Book.query.order_by(Book.publication_year).all()
+        books = query.order_by(Book.publication_year).all()
     else:
-        # Default: sort by title
-        books = Book.query.order_by(Book.title).all()
+        books = query.order_by(Book.title).all()
 
-    return render_template('home.html', books=books, current_sort=sort_by)
+    return render_template('home.html',
+                           books=books,
+                           current_sort=sort_by,
+                           search_query=search_query)
 
 # Route to add authors
 @app.route('/add_author', methods=['GET', 'POST'])
@@ -128,6 +143,35 @@ def add_book():
     # GET request - show form with authors
     authors = Author.query.all()
     return render_template('add_book.html', authors=authors)
+
+# Route to delete a book
+@app.route('/book/<int:book_id>/delete', methods=['POST'])
+def delete_book(book_id):
+    # Find the book
+    book = Book.query.get_or_404(book_id)
+    book_title = book.title
+    author_id = book.author_id
+
+    # Delete the book
+    db.session.delete(book)
+    db.session.commit()
+
+    # Check if author has other books
+    other_books = Book.query.filter_by(author_id=author_id).count()
+    if other_books == 0:
+        # Delete author if no other books exist
+        author = Author.query.get(author_id)
+        if author:
+            author_name = author.name
+            db.session.delete(author)
+            db.session.commit()
+            flash(f'Book "{book_title}" and author "{author_name}" deleted successfully!', 'success')
+        else:
+            flash(f'Book "{book_title}" deleted successfully!', 'success')
+    else:
+        flash(f'Book "{book_title}" deleted successfully!', 'success')
+
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)

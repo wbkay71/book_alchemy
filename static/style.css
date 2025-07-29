@@ -105,3 +105,71 @@
         height: 90px;
     }
 }
+
+/* Search functionality */
+.search-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.search-form {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
+    font-size: 14px;
+}
+
+.search-button {
+    padding: 8px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.search-button:hover {
+    background-color: #45a049;
+}
+
+.clear-search {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.clear-search:hover {
+    text-decoration: underline;
+}
+
+/* Delete button */
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+/* Adjust book-info layout for delete button */
+.book-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
