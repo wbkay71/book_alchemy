@@ -1,0 +1,107 @@
+/* Navigation buttons */
+.nav-buttons {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.button {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    margin: 0 10px;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.button:hover {
+    background-color: #45a049;
+    text-decoration: none;
+}
+
+/* Book list styling */
+.book-list {
+    margin-top: 30px;
+}
+
+.book-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #4CAF50;
+}
+
+.book-item h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.book-details {
+    color: #666;
+    margin: 5px 0;
+}
+
+.isbn {
+    font-size: 0.9em;
+    color: #999;
+}
+
+.no-books {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin: 40px 0;
+}
+
+/* Sorting options */
+.sort-options {
+    margin: 20px 0;
+    text-align: center;
+    font-size: 16px;
+}
+
+.sort-link {
+    color: #4CAF50;
+    text-decoration: none;
+    padding: 5px 10px;
+    margin: 0 5px;
+}
+
+.sort-link:hover {
+    text-decoration: underline;
+}
+
+.sort-link.active {
+    font-weight: bold;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 4px;
+}
+
+/* Book covers */
+.book-item {
+    display: flex;
+    gap: 20px;
+    align-items: start;
+}
+
+.book-cover {
+    width: 80px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.book-info {
+    flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .book-cover {
+        width: 60px;
+        height: 90px;
+    }
+}

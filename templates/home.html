@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Alchemy - Digital Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📚 My Digital Library</h1>
+
+        <div class="nav-buttons">
+            <a href="{{ url_for('add_author') }}" class="button">Add Author</a>
+            <a href="{{ url_for('add_book') }}" class="button">Add Book</a>
+        </div>
+
+        <h2>My Books</h2>
+
+        {% if books %}
+            <!-- Sorting options -->
+            <div class="sort-options">
+                <span>Sort by: </span>
+                <a href="{{ url_for('home', sort='title') }}"
+                   class="sort-link {% if current_sort == 'title' %}active{% endif %}">Title</a> |
+                <a href="{{ url_for('home', sort='author') }}"
+                   class="sort-link {% if current_sort == 'author' %}active{% endif %}">Author</a> |
+                <a href="{{ url_for('home', sort='year') }}"
+                   class="sort-link {% if current_sort == 'year' %}active{% endif %}">Year</a>
+            </div>
+
+            <div class="book-list">
+                {% for book in books %}
+                    <div class="book-item">
+                        {% if book.isbn %}
+                            <img src="https://books.google.com/books/content?vid=isbn{{ book.isbn }}&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+                                 alt="{{ book.title }} cover"
+                                 class="book-cover"
+                                 onerror="this.src='{{ url_for('static', filename='no-cover.svg') }}'">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='no-cover.svg') }}"
+                                 alt="No cover available"
+                                 class="book-cover">
+                        {% endif %}
+                        <div class="book-info">
+                            <h3>{{ book.title }}</h3>
+                            <p class="book-details">
+                                by {{ book.author.name }}
+                                {% if book.publication_year %}
+                                    ({{ book.publication_year }})
+                                {% endif %}
+                            </p>
+                            {% if book.isbn %}
+                                <p class="isbn">ISBN: {{ book.isbn }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-books">No books in your library yet. <a href="{{ url_for('add_author') }}">Start by adding an author!</a></p>
+        {% endif %}
+    </div>
+</body>
+</html>
