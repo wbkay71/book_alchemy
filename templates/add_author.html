@@ -24,7 +24,8 @@
 
         <form action="/add_author" method="POST">
             <label for="name">Author Name:</label>
-            <input type="text" id="name" name="name" required><br><br>
+            <input type="text" id="name" name="name" required
+                   value="{{ prefill_name or '' }}"><br><br>
 
             <label for="birthdate">Birthdate:</label>
             <input type="date" id="birthdate" name="birthdate"><br><br>

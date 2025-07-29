@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }} - Book Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Book Details</h1>
+
+        <div class="detail-content">
+            <div class="detail-cover">
+                {% if book.isbn %}
+                    <img src="https://books.google.com/books/content?vid=isbn{{ book.isbn }}&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+                         alt="{{ book.title }} cover"
+                         class="book-cover-large"
+                         onerror="this.src='{{ url_for('static', filename='no-cover.svg') }}'">
+                {% else %}
+                    <img src="{{ url_for('static', filename='no-cover.svg') }}"
+                         alt="No cover available"
+                         class="book-cover-large">
+                {% endif %}
+            </div>
+
+            <div class="detail-info">
+                <h2>{{ book.title }}</h2>
+
+                <table class="detail-table">
+                    <tr>
+                        <th>Author:</th>
+                        <td><a href="{{ url_for('author_detail', author_id=book.author.id) }}">{{ book.author.name }}</a></td>
+                    </tr>
+                    {% if book.publication_year %}
+                    <tr>
+                        <th>Publication Year:</th>
+                        <td>{{ book.publication_year }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if book.isbn %}
+                    <tr>
+                        <th>ISBN:</th>
+                        <td>{{ book.isbn }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if book.author.birth_date %}
+                    <tr>
+                        <th>Author Born:</th>
+                        <td>{{ book.author.birth_date.strftime('%B %d, %Y') }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if book.author.date_of_death %}
+                    <tr>
+                        <th>Author Died:</th>
+                        <td>
+                            {{ book.author.date_of_death.strftime('%B %d, %Y') }}
+                            {% if book.author.birth_date %}
+                                (aged {{ (book.author.date_of_death.year - book.author.birth_date.year) - ((book.author.date_of_death.month, book.author.date_of_death.day) < (book.author.birth_date.month, book.author.birth_date.day)) }})
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% if book.publication_year and book.author.birth_date %}
+                    <tr>
+                        <th>Author's Age at Publication:</th>
+                        <td>{{ book.publication_year - book.author.birth_date.year }} years old</td>
+                    </tr>
+                    {% endif %}
+                </table>
+
+                <div class="detail-actions">
+                    <form method="POST" action="{{ url_for('delete_book', book_id=book.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete this book?');">
+                        <button type="submit" class="delete-button">Delete This Book</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-links">
+            <a href="{{ url_for('home') }}">&larr; Back to Library</a>
+        </div>
+    </div>
+</body>
+</html>

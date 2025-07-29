@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy import or_ as db_or
 from flask_sqlalchemy import SQLAlchemy
+import requests
 import os
 from datetime import datetime
 
@@ -68,6 +69,9 @@ def home():
 # Route to add authors
 @app.route('/add_author', methods=['GET', 'POST'])
 def add_author():
+    # Get prefilled name from URL parameter
+    prefill_name = request.args.get('prefill_name', '')
+
     if request.method == 'POST':
         # Get form data
         name = request.form.get('name')
@@ -112,35 +116,125 @@ def add_author():
         flash('Author added successfully!', 'success')
         return redirect(url_for('add_author'))
 
-    return render_template('add_author.html')
-
+    return render_template('add_author.html', prefill_name=prefill_name)
 
 # Route to add books
 @app.route('/add_book', methods=['GET', 'POST'])
 def add_book():
     if request.method == 'POST':
-        # Get form data
+        action = request.form.get('action')
         isbn = request.form.get('isbn')
-        title = request.form.get('title')
-        publication_year = request.form.get('publication_year')
-        author_id = request.form.get('author_id')
 
-        # Create new book
-        new_book = Book(
-            isbn=isbn if isbn else None,  # ISBN is optional
-            title=title,
-            publication_year=int(publication_year) if publication_year else None,
-            author_id=int(author_id)
-        )
+        # ISBN Lookup
+        if action == 'lookup' and isbn:
+            try:
+                response = requests.get(f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
+                data = response.json()
 
-        # Add to database
-        db.session.add(new_book)
-        db.session.commit()
+                if data.get('totalItems', 0) > 0:
+                    book_info = data['items'][0]['volumeInfo']
 
-        flash('Book added successfully!', 'success')
-        return redirect(url_for('add_book'))
+                    title = book_info.get('title', '')
+                    authors_list = book_info.get('authors', [])
+                    year_str = book_info.get('publishedDate', '')
+                    year = year_str[:4] if year_str else ''
 
-    # GET request - show form with authors
+                    # Auto-create author if not exists
+                    selected_author_id = None
+                    if authors_list:
+                        author_name = authors_list[0]
+
+                        # Check if author already exists
+                        existing_author = Author.query.filter_by(name=author_name).first()
+
+                        if existing_author:
+                            selected_author_id = existing_author.id
+                            flash(f'Book found: "{title}" by {author_name} (author already in database)', 'success')
+                        else:
+                            # Ask user if they want to create the author
+                            if request.form.get('create_author') == 'yes':
+                                # Create new author
+                                new_author = Author(name=author_name)
+                                db.session.add(new_author)
+                                db.session.commit()
+                                selected_author_id = new_author.id
+                                flash(f'Book found: "{title}" and author "{author_name}" added to database!', 'success')
+                            else:
+                                # Show confirmation dialog
+                                authors = Author.query.all()
+                                return render_template('add_book.html',
+                                                       authors=authors,
+                                                       prefill_title=title,
+                                                       prefill_isbn=isbn,
+                                                       prefill_year=year,
+                                                       prefill_author_name=author_name,
+                                                       show_author_confirm=True)
+
+                    authors = Author.query.all()
+                    return render_template('add_book.html',
+                                           authors=authors,
+                                           prefill_title=title,
+                                           prefill_isbn=isbn,
+                                           prefill_year=year,
+                                           selected_author_id=selected_author_id)
+                else:
+                    flash('No book found with this ISBN', 'error')
+            except Exception as e:
+                flash(f'Error looking up ISBN: {str(e)}', 'error')
+
+        # Confirm author creation
+        elif action == 'confirm_author':
+            author_name = request.form.get('author_name')
+            isbn = request.form.get('isbn')
+
+            # Create the author
+            new_author = Author(name=author_name)
+            db.session.add(new_author)
+            db.session.commit()
+
+            # Re-lookup the book to get all details again
+            try:
+                response = requests.get(f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
+                data = response.json()
+
+                if data.get('totalItems', 0) > 0:
+                    book_info = data['items'][0]['volumeInfo']
+                    title = book_info.get('title', '')
+                    year_str = book_info.get('publishedDate', '')
+                    year = year_str[:4] if year_str else ''
+
+                    flash(f'Author "{author_name}" added! Book details filled.', 'success')
+
+                    authors = Author.query.all()
+                    return render_template('add_book.html',
+                                           authors=authors,
+                                           prefill_title=title,
+                                           prefill_isbn=isbn,
+                                           prefill_year=year,
+                                           selected_author_id=new_author.id)
+            except:
+                pass
+
+        # Normal book adding
+        elif action == 'add' or not action:
+            title = request.form.get('title')
+            publication_year = request.form.get('publication_year')
+            author_id = request.form.get('author_id')
+
+            if title and author_id:
+                new_book = Book(
+                    isbn=isbn if isbn else None,
+                    title=title,
+                    publication_year=int(publication_year) if publication_year else None,
+                    author_id=int(author_id)
+                )
+
+                db.session.add(new_book)
+                db.session.commit()
+
+                flash('Book added successfully!', 'success')
+                return redirect(url_for('add_book'))
+
     authors = Author.query.all()
     return render_template('add_book.html', authors=authors)
 
@@ -172,6 +266,20 @@ def delete_book(book_id):
         flash(f'Book "{book_title}" deleted successfully!', 'success')
 
     return redirect(url_for('home'))
+
+# Book detail page
+@app.route('/book/<int:book_id>')
+def book_detail(book_id):
+    book = Book.query.get_or_404(book_id)
+    return render_template('book_detail.html', book=book)
+
+# Author detail page
+@app.route('/author/<int:author_id>')
+def author_detail(author_id):
+    author = Author.query.get_or_404(author_id)
+    # Get all books by this author
+    books = Book.query.filter_by(author_id=author_id).order_by(Book.publication_year).all()
+    return render_template('author_detail.html', author=author, books=books)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)

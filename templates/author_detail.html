@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ author.name }} - Author Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Author Details</h1>
+
+        <div class="author-info">
+            <h2>{{ author.name }}</h2>
+
+            <table class="detail-table">
+                {% if author.birth_date %}
+                <tr>
+                    <th>Born:</th>
+                    <td>{{ author.birth_date.strftime('%B %d, %Y') }}</td>
+                </tr>
+                {% endif %}
+                {% if author.date_of_death %}
+                <tr>
+                    <th>Died:</th>
+                    <td>
+                        {{ author.date_of_death.strftime('%B %d, %Y') }}
+                        {% if author.birth_date %}
+                            (aged {{ (author.date_of_death.year - author.birth_date.year) - ((author.date_of_death.month, author.date_of_death.day) < (author.birth_date.month, author.birth_date.day)) }})
+                        {% endif %}
+                    </td>
+                </tr>
+                {% elif author.birth_date %}
+                <tr>
+                    <th>Age:</th>
+                    <td>{{ (datetime.now().year - author.birth_date.year) - ((datetime.now().month, datetime.now().day) < (author.birth_date.month, author.birth_date.day)) }} years old</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Books in Library:</th>
+                    <td>{{ books|length }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>Books by {{ author.name }} in Your Library</h3>
+
+        {% if books %}
+            <div class="author-books-grid">
+                {% for book in books %}
+                    <div class="author-book-item">
+                        <a href="{{ url_for('book_detail', book_id=book.id) }}">
+                            {% if book.isbn %}
+                                <img src="https://books.google.com/books/content?vid=isbn{{ book.isbn }}&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+                                     alt="{{ book.title }} cover"
+                                     class="book-cover-small"
+                                     onerror="this.src='{{ url_for('static', filename='no-cover.svg') }}'">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='no-cover.svg') }}"
+                                     alt="No cover available"
+                                     class="book-cover-small">
+                            {% endif %}
+                            <p>{{ book.title }}</p>
+                            {% if book.publication_year %}
+                                <span class="year">({{ book.publication_year }})</span>
+                                {% if author.birth_date and book.publication_year %}
+                                    <br>
+                                    <span class="author-age">
+                                        Author was {{ book.publication_year - author.birth_date.year }} years old
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No books by this author in your library yet.</p>
+        {% endif %}
+
+        <div class="navigation-links">
+            <a href="{{ url_for('home') }}">&larr; Back to Library</a>
+        </div>
+    </div>
+</body>
+</html>

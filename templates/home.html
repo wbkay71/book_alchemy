@@ -58,9 +58,9 @@
                                  class="book-cover">
                         {% endif %}
                         <div class="book-info">
-                            <h3>{{ book.title }}</h3>
+                            <h3><a href="{{ url_for('book_detail', book_id=book.id) }}" class="book-link">{{ book.title }}</a></h3>
                             <p class="book-details">
-                                by {{ book.author.name }}
+                                by <a href="{{ url_for('author_detail', author_id=book.author.id) }}" class="author-link">{{ book.author.name }}</a>
                                 {% if book.publication_year %}
                                     ({{ book.publication_year }})
                                 {% endif %}

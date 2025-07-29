@@ -22,29 +22,106 @@
             {% endif %}
         {% endwith %}
 
+        <!-- Author creation confirmation -->
+        {% if show_author_confirm %}
+            <div class="author-confirm-box">
+                <h3>New Author Found!</h3>
+                <p>The author "<strong>{{ prefill_author_name }}</strong>" is not in your database yet.</p>
+                <p>Would you like to add this author automatically?</p>
+
+                <form action="/add_book" method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="confirm_author">
+                    <input type="hidden" name="author_name" value="{{ prefill_author_name }}">
+                    <input type="hidden" name="isbn" value="{{ prefill_isbn }}">
+                    <button type="submit" class="confirm-button">Yes, Add Author</button>
+                </form>
+
+                <a href="{{ url_for('add_book') }}" class="cancel-link">No, I'll add manually</a>
+            </div>
+            <hr style="margin: 20px 0;">
+        {% endif %}
+
+        <!-- ISBN Lookup Form -->
+        <form action="/add_book" method="POST" style="margin-bottom: 20px;">
+            <input type="hidden" name="action" value="lookup">
+            <div class="isbn-lookup-group">
+                <div style="flex: 1;">
+                    <label for="isbn-lookup">ISBN Lookup:</label>
+                    <input type="text" id="isbn-lookup" name="isbn" maxlength="13"
+                           placeholder="Enter ISBN to auto-fill book details"
+                           style="width: 300px;">
+                </div>
+                <button type="submit" class="lookup-button">Lookup ISBN</button>
+            </div>
+        </form>
+
+        <hr style="margin: 20px 0;">
+
+        <!-- Main Book Form -->
         <form action="/add_book" method="POST">
+            <input type="hidden" name="action" value="add">
+
             <label for="isbn">ISBN:</label>
-            <input type="text" id="isbn" name="isbn" maxlength="13"><br><br>
+            <input type="text" id="isbn" name="isbn" maxlength="13"
+                   value="{{ prefill_isbn or '' }}"
+                   style="width: 300px;"><br><br>
 
             <label for="title">Book Title:</label>
-            <input type="text" id="title" name="title" required><br><br>
+            <input type="text" id="title" name="title" required
+                   value="{{ prefill_title or '' }}"
+                   style="width: 400px;"><br><br>
 
             <label for="publication_year">Publication Year:</label>
-            <input type="number" id="publication_year" name="publication_year" min="1000" max="2024"><br><br>
+            <input type="number" id="publication_year" name="publication_year"
+                   min="1000" max="2024"
+                   value="{{ prefill_year or '' }}"
+                   style="width: 100px;"><br><br>
 
             <label for="author_id">Author:</label>
-            <select id="author_id" name="author_id" required>
+            <select id="author_id" name="author_id" required style="width: 300px;">
                 <option value="">Select an author</option>
                 {% for author in authors %}
-                    <option value="{{ author.id }}">{{ author.name }}</option>
+                    <option value="{{ author.id }}"
+                            {% if selected_author_id == author.id %}selected{% endif %}>
+                        {{ author.name }}
+                    </option>
                 {% endfor %}
             </select><br><br>
 
-            <input type="submit" value="Add Book">
+            <button type="submit" class="submit-button">Add Book</button>
         </form>
 
         <br>
         <a href="{{ url_for('home') }}">Back to Home</a>
     </div>
+
+    <style>
+        .author-confirm-box {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .confirm-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .confirm-button:hover {
+            background-color: #45a049;
+        }
+
+        .cancel-link {
+            color: #666;
+            margin-left: 10px;
+        }
+    </style>
 </body>
 </html>
