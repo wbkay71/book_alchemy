@@ -279,7 +279,8 @@ def author_detail(author_id):
     author = Author.query.get_or_404(author_id)
     # Get all books by this author
     books = Book.query.filter_by(author_id=author_id).order_by(Book.publication_year).all()
-    return render_template('author_detail.html', author=author, books=books)
+    # Pass datetime to template
+    return render_template('author_detail.html', author=author, books=books, datetime=datetime)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)
